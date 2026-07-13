@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Delivery Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- app.js is loaded as an ES module at the bottom of <body> -->
+</head>
+<body>
+
+    <div class="mobile-shell">
+        <div class="app-header-accessory"></div>
+
+        <section id="screen-login" class="screen active">
+            <div class="brand-section">
+                <div class="brand-logo">📦</div>
+                <h1>SwiftRoute</h1>
+                <p>Delivery Agent Portal</p>
+            </div>
+            
+            <form id="login-form" autocomplete="off">
+                <div class="input-wrapper">
+                    <label for="agent-id">Agent Identifier</label>
+                    <input type="text" id="agent-id" placeholder="e.g., AGENT-709" required>
+                </div>
+                <div class="input-wrapper">
+                    <label for="password">Security Password</label>
+                    <input type="password" id="password" placeholder="••••••••" required>
+                </div>
+                <!-- Inline error message container for login failures -->
+                <p id="login-error" class="form-error" style="display:none;"></p>
+                <button type="submit" class="btn btn-primary">Sign In to Shift</button>
+            </form>
+        </section>
+
+        <section id="screen-dashboard" class="screen">
+            <div class="agent-profile-bar">
+                <div class="avatar">⚡</div>
+                <div>
+                    <div class="welcome-msg">Welcome Back,</div>
+                    <div id="display-agent-id" class="agent-name">Agent</div>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-val">12</span>
+                    <span class="stat-lbl">Assigned</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-val" style="color: #10b981;">8</span>
+                    <span class="stat-lbl">Completed</span>
+                </div>
+            </div>
+
+            <div class="action-card">
+                <h3>Scan Next Parcel</h3>
+                <p>Initialize the camera stream to read the package tracking matrix code instantly.</p>
+                <button id="btn-start-scan" class="btn btn-scan">📷 Initialize Scanner</button>
+            </div>
+
+            <button id="btn-logout" class="btn btn-secondary">End Active Shift</button>
+        </section>
+
+        <section id="screen-camera" class="screen">
+            <div class="screen-header">
+                <h2>Matrix Scanner</h2>
+                <p>Align the parcel QR code within the targeting crosshairs</p>
+            </div>
+            
+            <div id="qr-reader"></div>
+
+            <div class="manual-fallback" style="margin-top: 15px; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+                <p style="font-size: 0.85rem; color: var(--muted); margin-top: 0; margin-bottom: 10px;">Scanner failing or damaged QR?</p>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="manual-token-input" placeholder="e.g. PKG_8XH3KD92" class="form-control" style="flex: 1; text-transform: uppercase;">
+                    <button id="btn-manual-submit" class="btn btn-primary" style="padding: 0.75rem 1rem;">Verify</button>
+                </div>
+            </div>
+            
+            <button id="btn-cancel-scan" class="btn btn-danger" style="margin-top: 15px;">Abort Scanning</button>
+        </section>
+
+        <section id="screen-loading" class="screen extreme-center">
+            <div class="loader-wrapper">
+                <div class="pulse-ring"></div>
+                <div class="spinner"></div>
+            </div>
+            <h3>Syncing Parcel Registry</h3>
+            <p>Pulling verification manifests from central node...</p>
+        </section>
+
+        <section id="screen-otp" class="screen">
+            <div class="screen-header">
+                <h2>Secure Handover</h2>
+                <p>A verification code has been dispatched to the consignee's device.</p>
+            </div>
+
+            <div class="parcel-brief-card">
+                <div><small>PARCEL ID</small><strong>#QX-9921-TRK</strong></div>
+                <div style="text-align: right;"><small>STATUS</small><span class="badge">Pending OTP</span></div>
+            </div>
+
+            <form id="otp-form">
+                <div class="input-wrapper">
+                    <label for="otp" style="text-align: center;">Enter 4-Digit Passcode</label>
+                    <input type="text" id="otp" maxlength="4" placeholder="••••" class="otp-field" required>
+                    <!-- Inline error message container for OTP failures -->
+                    <p id="otp-error" class="form-error" style="display:none;"></p>
+                </div>
+                <button type="submit" class="btn btn-primary">Verify & Complete Handover</button>
+            </form>
+        </section>
+
+    </div>
+
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="app.js" type="module"></script>
+</body>
+</html>

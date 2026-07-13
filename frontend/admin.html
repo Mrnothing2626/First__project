@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwiftRoute — Admin Command Centre</title>
+    <meta name="description" content="SwiftRoute admin panel for creating delivery packages and generating QR tracking codes.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* ── Reset & Tokens ─────────────────────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:          #0a0f1e;
+            --surface:     #111827;
+            --surface2:    #1a2235;
+            --border:      rgba(255,255,255,0.07);
+            --accent:      #6366f1;
+            --accent-glow: rgba(99,102,241,0.35);
+            --accent2:     #10b981;
+            --danger:      #ef4444;
+            --text:        #f1f5f9;
+            --muted:       #64748b;
+            --radius:      14px;
+            --font:        'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ── Screens ────────────────────────────────────────────────────────── */
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        /* ── Login Screen ───────────────────────────────────────────────────── */
+        #screen-login {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background:
+                radial-gradient(ellipse 80% 60% at 50% 0%, rgba(99,102,241,0.18) 0%, transparent 70%),
+                var(--bg);
+        }
+        #screen-login.active { display: flex; }
+
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 48px 40px;
+            box-shadow: 0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(99,102,241,0.1);
+            animation: fadeUp 0.5s ease both;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-brand {
+            text-align: center;
+            margin-bottom: 36px;
+        }
+
+        .login-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--accent), #818cf8);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin: 0 auto 16px;
+            box-shadow: 0 8px 32px var(--accent-glow);
+        }
+
+        .login-brand h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .login-brand p {
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        /* ── Form Inputs ────────────────────────────────────────────────────── */
+        .field { margin-bottom: 18px; }
+
+        .field label {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 8px;
+        }
+
+        .field input {
+            width: 100%;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 13px 16px;
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .field input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .field input::placeholder { color: var(--muted); }
+
+        /* ── Buttons ────────────────────────────────────────────────────────── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 10px;
+            font-family: var(--font);
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:active { transform: scale(0.98); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), #818cf8);
+            color: #fff;
+            box-shadow: 0 4px 20px var(--accent-glow);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            box-shadow: 0 6px 28px rgba(99,102,241,0.55);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--muted);
+        }
+
+        .btn-secondary:hover:not(:disabled) { border-color: var(--accent); color: var(--text); }
+
+        .btn-sm {
+            width: auto;
+            padding: 9px 18px;
+            font-size: 0.85rem;
+        }
+
+        .btn-danger {
+            background: rgba(239,68,68,0.12);
+            border: 1px solid rgba(239,68,68,0.3);
+            color: #fca5a5;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background: rgba(239,68,68,0.2);
+        }
+
+        /* ── Error ───────────────────────────────────────────────────────────── */
+        .form-error {
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.3);
+            color: #fca5a5;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 0.85rem;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        /* ── Dashboard Layout ───────────────────────────────────────────────── */
+        #screen-dashboard.active { display: flex; flex-direction: column; min-height: 100vh; }
+
+        /* Top bar */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10,15,30,0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 32px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .topbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .topbar-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent), #818cf8);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .topbar-brand span {
+            font-weight: 800;
+            font-size: 1.05rem;
+            letter-spacing: -0.01em;
+        }
+
+        .topbar-brand small {
+            font-size: 0.72rem;
+            font-weight: 600;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-left: 8px;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .admin-pill {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 6px 14px 6px 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .admin-avatar {
+            width: 26px;
+            height: 26px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        /* Main content area */
+        .dashboard-content {
+            flex: 1;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 32px 32px 64px;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(to bottom, var(--accent), #818cf8);
+            border-radius: 99px;
+        }
+
+        /* Two-column grid */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        @media (max-width: 768px) {
+            .main-grid { grid-template-columns: 1fr; }
+            .topbar { padding: 0 16px; }
+            .dashboard-content { padding: 20px 16px 48px; }
+        }
+
+        /* ── Cards ───────────────────────────────────────────────────────────── */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px;
+        }
+
+        .card-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 22px;
+            color: var(--text);
+        }
+
+        /* ── QR Result Panel ─────────────────────────────────────────────────── */
+        #qr-result {
+            display: none;
+            background: var(--surface);
+            border: 1px solid rgba(99,102,241,0.3);
+            border-radius: var(--radius);
+            padding: 28px;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(99,102,241,0.12);
+            animation: fadeUp 0.4s ease both;
+        }
+
+        #qr-result .qr-label {
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            margin-bottom: 16px;
+        }
+
+        #qr-image {
+            width: 200px;
+            height: 200px;
+            border-radius: 12px;
+            border: 3px solid rgba(99,102,241,0.3);
+            margin: 0 auto 20px;
+            display: block;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+
+        .qr-meta {
+            background: var(--surface2);
+            border-radius: 10px;
+            padding: 14px 16px;
+            text-align: left;
+            margin-bottom: 18px;
+        }
+
+        .qr-meta-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+
+        .qr-meta-row:last-child { margin-bottom: 0; }
+
+        .qr-meta-row .key { color: var(--muted); font-size: 0.78rem; }
+
+        .qr-meta-row .val {
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+            color: var(--accent);
+            font-size: 0.88rem;
+        }
+
+        .print-area { display: flex; gap: 10px; }
+        .print-area .btn { flex: 1; }
+
+        /* ── Packages Table ──────────────────────────────────────────────────── */
+        .table-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: var(--muted);
+            background: rgba(255,255,255,0.02);
+            border-bottom: 1px solid var(--border);
+        }
+
+        tbody td {
+            padding: 14px 16px;
+            font-size: 0.875rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        tbody tr:last-child td { border-bottom: none; }
+
+        tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+        .mono {
+            font-family: 'Courier New', monospace;
+            font-size: 0.82rem;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .tbl-loading {
+            text-align: center;
+            color: var(--muted);
+            padding: 32px !important;
+            font-size: 0.9rem;
+        }
+
+        /* ── Status Badges ───────────────────────────────────────────────────── */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .badge-placed    { background: rgba(99,102,241,0.15); color: #a5b4fc; }
+        .badge-warehouse { background: rgba(245,158,11,0.15); color: #fcd34d; }
+        .badge-out       { background: rgba(59,130,246,0.15); color: #93c5fd; }
+        .badge-arrived   { background: rgba(251,146,60,0.15); color: #fdba74; }
+        .badge-delivered { background: rgba(16,185,129,0.15); color: #6ee7b7; }
+
+        /* ── Print mode ──────────────────────────────────────────────────────── */
+        @media print {
+            body * { visibility: hidden; }
+            #qr-result, #qr-result * { visibility: visible; }
+            #qr-result {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                border: none;
+                box-shadow: none;
+            }
+            .print-area { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!--  LOGIN SCREEN                                                             -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<section id="screen-login" class="screen active">
+    <div class="login-card">
+        <div class="login-brand">
+            <div class="login-icon">🛡️</div>
+            <h1>SwiftRoute</h1>
+            <p>Admin Command Centre</p>
+        </div>
+
+        <p id="login-error" class="form-error"></p>
+
+        <form id="login-form" autocomplete="off">
+            <div class="field">
+                <label for="admin-id">Admin ID</label>
+                <input type="text" id="admin-id" placeholder="e.g. ADMIN1" required>
+            </div>
+            <div class="field">
+                <label for="admin-password">Password</label>
+                <input type="password" id="admin-password" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Sign In</button>
+        </form>
+    </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!--  DASHBOARD SCREEN                                                         -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<section id="screen-dashboard" class="screen">
+
+    <!-- Top bar -->
+    <header class="topbar">
+        <div class="topbar-brand">
+            <div class="topbar-icon">📦</div>
+            <span>SwiftRoute <small>Admin</small></span>
+        </div>
+        <div class="topbar-right">
+            <div class="admin-pill">
+                <div class="admin-avatar">⚙️</div>
+                <span id="admin-name-display">Admin</span>
+            </div>
+            <button id="btn-logout" class="btn btn-danger btn-sm">Sign Out</button>
+        </div>
+    </header>
+
+    <!-- Main content -->
+    <div class="dashboard-content">
+
+        <div class="section-title">Create & Dispatch</div>
+
+        <div class="main-grid">
+
+            <!-- ── Create Package Form ── -->
+            <div class="card">
+                <div class="card-title">📋 New Package Details</div>
+
+                <p id="create-error" class="form-error"></p>
+
+                <form id="create-form" autocomplete="off">
+                    <div class="field">
+                        <label for="customerName">Customer Name</label>
+                        <input type="text" id="customerName" placeholder="e.g. Riya Sharma" required>
+                    </div>
+                    <div class="field">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" placeholder="+91-9876543210" required>
+                    </div>
+                    <div class="field">
+                        <label for="macroLocation">Delivery Sector (Macro)</label>
+                        <input type="text" id="macroLocation" placeholder="e.g. Sector 14, Gurugram" required>
+                    </div>
+                    <div class="field">
+                        <label for="microLocation">Exact Address (Micro)</label>
+                        <input type="text" id="microLocation" placeholder="e.g. Flat 4B, Sunrise Apartments" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">✦ Generate Package &amp; QR</button>
+                </form>
+            </div>
+
+            <!-- ── QR Result Panel ── -->
+            <div id="qr-result">
+                <div class="qr-label">Scan &amp; Attach to Parcel</div>
+                <img id="qr-image" src="" alt="QR Code">
+                <div class="qr-meta">
+                    <div class="qr-meta-row">
+                        <span class="key">Tracking Token</span>
+                        <span class="val" id="qr-token">—</span>
+                    </div>
+                    <div class="qr-meta-row">
+                        <span class="key">Customer</span>
+                        <span class="val" id="qr-customer" style="font-family:inherit;color:var(--text)">—</span>
+                    </div>
+                    <div class="qr-meta-row">
+                        <span class="key">Sector</span>
+                        <span class="val" id="qr-location" style="font-family:inherit;color:var(--text)">—</span>
+                    </div>
+                </div>
+                <div class="print-area">
+                    <button id="btn-print" class="btn btn-secondary">🖨️ Print Label</button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ── Packages Table ── -->
+        <div class="section-title">All Packages</div>
+        <div class="table-card">
+            <div class="table-header">
+                <span style="font-size:.9rem;font-weight:700;">Live Registry</span>
+                <button id="btn-refresh" class="btn btn-secondary btn-sm">↻ Refresh</button>
+            </div>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tracking Token</th>
+                            <th>Customer</th>
+                            <th>Sector</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pkg-tbody">
+                        <tr><td colspan="5" class="tbl-loading">Loading…</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div><!-- /dashboard-content -->
+
+</section>
+
+<script src="admin.js" type="module"></script>
+</body>
+</html>
